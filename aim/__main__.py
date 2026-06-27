@@ -43,6 +43,10 @@ def main(argv: list[str] | None = None) -> int:
     sub = parser.add_subparsers(dest="cmd")
     sub.add_parser("ping", help="เช็กการต่อ Qdrant + list collections")
     sub.add_parser("index", help="embed catalog เข้า Qdrant collection")
+    p_route = sub.add_parser("route", help="บอกงาน -> แนะนำ capability ที่ใช่")
+    p_route.add_argument("task", help="คำอธิบายงานเป็นภาษาคน")
+    p_route.add_argument("--top-k", type=int, default=5)
+    p_route.add_argument("--harness", choices=["claude", "ollama", "both"], default=None)
 
     args = parser.parse_args(argv)
     settings = load_settings()
@@ -52,6 +56,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.cmd == "index":
         from .index import cmd_index
         return cmd_index(settings)
+    if args.cmd == "route":
+        from .router import cmd_route
+        return cmd_route(settings, args.task, args.top_k, args.harness)
 
     parser.print_help()
     return 0
