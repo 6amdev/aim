@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Secrets / env
+.env
+secrets/
+*.key
+
+# Local cache / scratch
+.cache/
+_temp/
+
+# OS / editor
+.DS_Store
+.claude/launch.json
