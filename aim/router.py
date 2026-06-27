@@ -7,6 +7,7 @@ from __future__ import annotations
 from .index import MODEL_NAME, _req
 
 _TIER_ICON = {"must-have": "🟢", "nice-to-have": "🟡", "niche": "⚪"}
+_TYPE_ICON = {"skill": "📄 skill", "mcp-tool": "🛠️ tool", "agent": "🤖 agent", "rag": "📚 rag"}
 
 
 def cmd_route(settings: dict, task: str, top_k: int = 5,
@@ -44,7 +45,8 @@ def cmd_route(settings: dict, task: str, top_k: int = 5,
         for i, pick in enumerate(picks, 1):
             p = by_name.get(pick.get("name"), {})
             icon = _TIER_ICON.get(p.get("tier"), "")
-            print(f"{i}. {icon} {pick.get('name')}  ({p.get('domain')}/{p.get('subcategory')})")
+            tlabel = _TYPE_ICON.get(p.get("type", "skill"), "")
+            print(f"{i}. {icon} {pick.get('name')}  [{tlabel}]  ({p.get('domain')}/{p.get('subcategory')})")
             print(f"   เหตุผล: {pick.get('why')}")
             if p.get("url"):
                 print(f"   {p.get('url')}")
@@ -56,7 +58,8 @@ def cmd_route(settings: dict, task: str, top_k: int = 5,
     for i, h in enumerate(hits, 1):
         p = h.get("payload", {})
         icon = _TIER_ICON.get(p.get("tier"), "")
-        print(f"{i}. {icon} {p.get('name')}  ({p.get('domain')}/{p.get('subcategory')})  ~{h.get('score'):.3f}")
+        tlabel = _TYPE_ICON.get(p.get("type", "skill"), "")
+        print(f"{i}. {icon} {p.get('name')}  [{tlabel}]  ({p.get('domain')}/{p.get('subcategory')})  ~{h.get('score'):.3f}")
         print(f"   {p.get('summary_th')}")
         print(f"   {p.get('url')}\n")
     return 0
