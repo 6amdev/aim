@@ -9,5 +9,5 @@ docker run --rm --network backend \
   -v aim-cache:/root/.cache \
   -v "$REPO:/app" -w /app \
   -v "$HOME/.env:/secrets/.env:ro" -e AIM_SECRETS_FILE=/secrets/.env \
-  aim:dev route "$TASK" --top-k "$TOPK" --llm 2>&1 \
+  aim:dev route "$TASK" --top-k "$TOPK" --verify 2>&1 \
   | grep -viE "warning|fetching|deprecat|TextEmbedding"

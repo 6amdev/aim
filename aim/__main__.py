@@ -48,6 +48,7 @@ def main(argv: list[str] | None = None) -> int:
     p_route.add_argument("--top-k", type=int, default=5)
     p_route.add_argument("--harness", choices=["claude", "ollama", "both"], default=None)
     p_route.add_argument("--llm", action="store_true", help="LLM re-rank (ต้องมี OPENROUTER_API_KEY)")
+    p_route.add_argument("--verify", action="store_true", help="verify คำแนะนำ (กรอง+confidence+gap, implies --llm)")
 
     args = parser.parse_args(argv)
     settings = load_settings()
@@ -59,7 +60,7 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_index(settings)
     if args.cmd == "route":
         from .router import cmd_route
-        return cmd_route(settings, args.task, args.top_k, args.harness, args.llm)
+        return cmd_route(settings, args.task, args.top_k, args.harness, args.llm, args.verify)
 
     parser.print_help()
     return 0

@@ -11,7 +11,10 @@ _TYPE_ICON = {"skill": "📄 skill", "mcp-tool": "🛠️ tool", "agent": "🤖 
 
 
 def cmd_route(settings: dict, task: str, top_k: int = 5,
-              harness: str | None = None, use_llm: bool = False) -> int:
+              harness: str | None = None, use_llm: bool = False,
+              use_verify: bool = False) -> int:
+    if use_verify:
+        use_llm = True  # verify ต้องมี picks จาก re-rank ก่อน
     from fastembed import TextEmbedding
 
     base = settings["qdrant_url"].rstrip("/")
@@ -41,7 +44,17 @@ def cmd_route(settings: dict, task: str, top_k: int = 5,
 
     if picks:
         by_name = {h.get("payload", {}).get("name"): h.get("payload", {}) for h in hits}
-        print(f"   แนะนำ {len(picks)} capability (LLM re-ranked):\n")
+
+        verdict = None
+        if use_verify:
+            from .llm import verify
+            verdict = verify(settings, task, picks, by_name)
+            if verdict and verdict.get("verified"):
+                keep = set(verdict["verified"])
+                picks = [p for p in picks if p.get("name") in keep] or picks
+
+        label = "LLM re-ranked + verified" if verdict else "LLM re-ranked"
+        print(f"   แนะนำ {len(picks)} capability ({label}):\n")
         for i, pick in enumerate(picks, 1):
             p = by_name.get(pick.get("name"), {})
             icon = _TIER_ICON.get(p.get("tier"), "")
@@ -51,6 +64,13 @@ def cmd_route(settings: dict, task: str, top_k: int = 5,
             if p.get("url"):
                 print(f"   {p.get('url')}")
             print()
+        if verdict:
+            conf = verdict.get("confidence", "?")
+            conf_icon = {"high": "🟢", "medium": "🟡", "low": "🔴"}.get(conf, "")
+            print(f"   {conf_icon} ความมั่นใจ: {conf}")
+            gap = verdict.get("gap", "")
+            if gap and gap != "ครบแล้ว":
+                print(f"   ⚠️ ยังขาด: {gap}")
         return 0
 
     hits = hits[:top_k]
