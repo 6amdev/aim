@@ -12,7 +12,8 @@ import uuid
 from pathlib import Path
 
 VECTOR_SIZE = 384
-MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
+# multilingual (รองรับไทย) — all-MiniLM-L6-v2 อ่อนภาษาไทย recall แย่
+MODEL_NAME = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 DATA_PATH = Path(__file__).resolve().parent.parent / "data" / "catalog.json"
 
 
