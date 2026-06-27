@@ -42,12 +42,16 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="aim", description="Aim — capability router")
     sub = parser.add_subparsers(dest="cmd")
     sub.add_parser("ping", help="เช็กการต่อ Qdrant + list collections")
+    sub.add_parser("index", help="embed catalog เข้า Qdrant collection")
 
     args = parser.parse_args(argv)
     settings = load_settings()
 
     if args.cmd == "ping":
         return cmd_ping(settings)
+    if args.cmd == "index":
+        from .index import cmd_index
+        return cmd_index(settings)
 
     parser.print_help()
     return 0
