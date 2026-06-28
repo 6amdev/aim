@@ -58,6 +58,7 @@ def main(argv: list[str] | None = None) -> int:
     p_route.add_argument("--llm", action="store_true", help="LLM re-rank (ต้องมี OPENROUTER_API_KEY)")
     p_route.add_argument("--verify", action="store_true", help="verify คำแนะนำ (กรอง+confidence+gap, implies --llm)")
     p_route.add_argument("--local", action="store_true", help="ค้นในเครื่อง ไม่ต้องใช้ server/Qdrant")
+    p_route.add_argument("--json", action="store_true", help="ผลเป็น JSON (ให้ AI/สคริปต์อ่านต่อ)")
     p_eval = sub.add_parser("eval", help="วัดคุณภาพ router ด้วย eval set (hit@k + MRR)")
     p_eval.add_argument("--top-k", type=int, default=5)
     p_eval.add_argument("--llm", action="store_true", help="วัดผลหลัง LLM re-rank ด้วย")
@@ -79,7 +80,7 @@ def main(argv: list[str] | None = None) -> int:
         from .router import cmd_route
         backend = "local" if args.local else "qdrant"
         return cmd_route(settings, args.task, args.top_k, args.harness,
-                         args.llm, args.verify, backend)
+                         args.llm, args.verify, backend, args.json)
     if args.cmd == "eval":
         from .eval import cmd_eval
         backend = "qdrant" if args.server else "local"
