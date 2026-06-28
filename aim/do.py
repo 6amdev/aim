@@ -39,12 +39,18 @@ def cmd_do(settings: dict, task: str, backend: str = "local") -> int:
         print(f"[aim] หา capability ที่เหมาะกับ \"{task}\" ไม่เจอ")
         return 1
 
-    top = picks[0]
-    name, ptype = top.get("name"), top.get("type", "skill")
     print(f"\n🎯 งาน: {task}")
-    print(f"   เลือกใช้: {name} [{ptype}] — {top.get('why') or top.get('summary_th')}")
     if result.get("confidence"):
         print(f"   ความมั่นใจ router: {result['confidence']}")
+
+    # do ลงมือทำได้เฉพาะ skill — ถ้า #1 เป็น agent/tool แต่มี skill ใน top-3 ให้ใช้ skill นั้นแทน
+    top = picks[0]
+    skill_pick = next((p for p in picks if p.get("type", "skill") == "skill"), None)
+    if skill_pick and skill_pick is not top:
+        print(f"   #1 คือ {top.get('name')} [{top.get('type')}] (เรียกเองไม่ได้) -> fall through ไป skill")
+    top = skill_pick or top
+    name, ptype = top.get("name"), top.get("type", "skill")
+    print(f"   เลือกใช้: {name} [{ptype}] — {top.get('why') or top.get('summary_th')}")
 
     if ptype != "skill":
         kind = {"mcp-tool": "MCP tool", "agent": "subagent", "rag": "RAG collection"}.get(ptype, ptype)
