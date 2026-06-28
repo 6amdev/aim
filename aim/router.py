@@ -12,30 +12,30 @@ _TYPE_ICON = {"skill": "📄 skill", "mcp-tool": "🛠️ tool", "agent": "🤖 
 
 def cmd_route(settings: dict, task: str, top_k: int = 5,
               harness: str | None = None, use_llm: bool = False,
-              use_verify: bool = False) -> int:
+              use_verify: bool = False, backend: str = "qdrant") -> int:
     if use_verify:
         use_llm = True  # verify ต้องมี picks จาก re-rank ก่อน
-    from fastembed import TextEmbedding
-
-    base = settings["qdrant_url"].rstrip("/")
-    coll = settings["collection"]
-
-    model = TextEmbedding(model_name=MODEL_NAME)
-    qvec = list(model.embed([task]))[0].tolist()
 
     # ดึง candidate เผื่อไว้เยอะขึ้นถ้าจะ LLM re-rank
     limit = max(top_k * 2, 12) if use_llm else top_k
-    body: dict = {"vector": qvec, "limit": limit, "with_payload": True}
-    if harness:
-        body["filter"] = {"should": [
-            {"key": "harness", "match": {"value": harness}},
-            {"key": "harness", "match": {"value": "both"}},
-        ]}
 
-    res = _req(f"{base}/collections/{coll}/points/search", body, method="POST")
-    hits = res.get("result", [])
+    if backend == "local":
+        from .local_store import local_search
+        hits = local_search(task, limit, settings, harness)
+    else:
+        from fastembed import TextEmbedding
+        base = settings["qdrant_url"].rstrip("/")
+        coll = settings["collection"]
+        qvec = list(TextEmbedding(model_name=MODEL_NAME).embed([task]))[0].tolist()
+        body: dict = {"vector": qvec, "limit": limit, "with_payload": True}
+        if harness:
+            body["filter"] = {"should": [
+                {"key": "harness", "match": {"value": harness}},
+                {"key": "harness", "match": {"value": "both"}},
+            ]}
+        hits = _req(f"{base}/collections/{coll}/points/search", body, method="POST").get("result", [])
 
-    print(f"\n🎯 งาน: {task}")
+    print(f"\n🎯 งาน: {task}  [{backend}]")
 
     picks = None
     if use_llm:

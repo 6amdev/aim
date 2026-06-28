@@ -12,6 +12,13 @@ import urllib.request
 
 from .config import load_settings
 
+# Windows console เป็น cp1252 พิมพ์ emoji/ไทยไม่ได้ — บังคับ utf-8
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8")
+    except (AttributeError, ValueError):
+        pass
+
 
 def _get_json(url: str, timeout: float = 10.0) -> dict:
     with urllib.request.urlopen(url, timeout=timeout) as resp:
@@ -42,13 +49,15 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="aim", description="Aim — capability router")
     sub = parser.add_subparsers(dest="cmd")
     sub.add_parser("ping", help="เช็กการต่อ Qdrant + list collections")
-    sub.add_parser("index", help="embed catalog เข้า Qdrant collection")
+    p_index = sub.add_parser("index", help="embed catalog เข้า Qdrant (หรือ --local)")
+    p_index.add_argument("--local", action="store_true", help="สร้าง local index ในเครื่อง (ไม่ใช้ Qdrant)")
     p_route = sub.add_parser("route", help="บอกงาน -> แนะนำ capability ที่ใช่")
     p_route.add_argument("task", help="คำอธิบายงานเป็นภาษาคน")
     p_route.add_argument("--top-k", type=int, default=5)
     p_route.add_argument("--harness", choices=["claude", "ollama", "both"], default=None)
     p_route.add_argument("--llm", action="store_true", help="LLM re-rank (ต้องมี OPENROUTER_API_KEY)")
     p_route.add_argument("--verify", action="store_true", help="verify คำแนะนำ (กรอง+confidence+gap, implies --llm)")
+    p_route.add_argument("--local", action="store_true", help="ค้นในเครื่อง ไม่ต้องใช้ server/Qdrant")
 
     args = parser.parse_args(argv)
     settings = load_settings()
@@ -56,11 +65,16 @@ def main(argv: list[str] | None = None) -> int:
     if args.cmd == "ping":
         return cmd_ping(settings)
     if args.cmd == "index":
+        if args.local:
+            from .local_store import build_local_index
+            return build_local_index(settings)
         from .index import cmd_index
         return cmd_index(settings)
     if args.cmd == "route":
         from .router import cmd_route
-        return cmd_route(settings, args.task, args.top_k, args.harness, args.llm, args.verify)
+        backend = "local" if args.local else "qdrant"
+        return cmd_route(settings, args.task, args.top_k, args.harness,
+                         args.llm, args.verify, backend)
 
     parser.print_help()
     return 0
