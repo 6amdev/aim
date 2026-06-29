@@ -13,6 +13,9 @@ secrets/
 .cache/
 _temp/
 
+# discover review queue (generated, ไม่ commit)
+data/discovered.json
+
 # OS / editor
 .DS_Store
 .claude/launch.json

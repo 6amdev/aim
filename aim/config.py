@@ -42,4 +42,5 @@ def load_settings() -> dict:
         "openrouter_key": get("OPENROUTER_API_KEY"),
         "openrouter_base": get("OPENROUTER_BASE_URL", DEFAULT_OPENROUTER_BASE),
         "model": get("OPENROUTER_DEFAULT_MODEL", DEFAULT_MODEL),
+        "github_token": get("GITHUB_TOKEN") or get("GH_TOKEN"),
     }
