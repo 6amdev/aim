@@ -13,8 +13,9 @@ secrets/
 .cache/
 _temp/
 
-# discover review queue (generated, ไม่ commit)
+# discover review queue + log (generated, ไม่ commit)
 data/discovered.json
+data/discover.log
 
 # OS / editor
 .DS_Store
