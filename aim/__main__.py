@@ -59,6 +59,7 @@ def main(argv: list[str] | None = None) -> int:
     p_route.add_argument("--verify", action="store_true", help="verify คำแนะนำ (กรอง+confidence+gap, implies --llm)")
     p_route.add_argument("--local", action="store_true", help="ค้นในเครื่อง ไม่ต้องใช้ server/Qdrant")
     p_route.add_argument("--json", action="store_true", help="ผลเป็น JSON (ให้ AI/สคริปต์อ่านต่อ)")
+    sub.add_parser("web", help="gen หน้าเว็บ browse catalog -> docs/catalog.html")
     p_disc = sub.add_parser("discover", help="หา skill ใหม่มา update catalog (เกณฑ์: คุณภาพ+ความใหม่)")
     p_disc.add_argument("--limit", type=int, default=8, help="จำนวน candidate สูงสุดที่เสนอ")
     p_disc.add_argument("--merge", action="store_true", help="รวม candidate ที่เสนอไว้เข้า catalog")
@@ -87,6 +88,9 @@ def main(argv: list[str] | None = None) -> int:
         backend = "local" if args.local else "qdrant"
         return cmd_route(settings, args.task, args.top_k, args.harness,
                          args.llm, args.verify, backend, args.json)
+    if args.cmd == "web":
+        from .webgen import cmd_web
+        return cmd_web(settings)
     if args.cmd == "discover":
         from .discover import cmd_discover
         return cmd_discover(settings, args.limit, args.merge)
